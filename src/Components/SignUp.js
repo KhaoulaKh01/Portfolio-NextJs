@@ -1,9 +1,9 @@
-// src/Components/SignUp.js
+//SignUp.js
 'use client';
 
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { register } from "../Slices/authSlice"; 
+import { register } from "../Slices/authSlice";
 
 const SignUp = ({ onClose }) => {
   const [email, setEmail] = useState('');
@@ -13,9 +13,20 @@ const SignUp = ({ onClose }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Register the new user
-    dispatch(register({ id: Date.now(), email, password }));
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const userExists = users.find(user => user.email === email);
 
+    if (userExists) {
+      alert('User already registered');
+      return;
+    }
+
+    // Register the new user
+    const newUser = { email, password };
+    users.push(newUser);
+    localStorage.setItem('users', JSON.stringify(users));
+
+    dispatch(register(newUser));
     onClose(); // Close the modal after registration
   };
 

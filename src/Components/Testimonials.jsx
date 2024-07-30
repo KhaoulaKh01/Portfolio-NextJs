@@ -1,9 +1,9 @@
 // src/Components/Testimonials.jsx
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { addTestimonial, editTestimonial, deleteTestimonial } from '../Slices/testimonialsSlice';
+import { addTestimonial, editTestimonial, deleteTestimonial, setTestimonials } from '../Slices/testimonialsSlice';
 
 const Testimonials = () => {
   const dispatch = useDispatch();
@@ -12,10 +12,28 @@ const Testimonials = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTestimonial, setNewTestimonial] = useState({
     author: '',
+    email: '',
     message: '',
     date: '',
     rating: 1
   });
+
+  // Exemple d'email de l'utilisateur actuel
+  const currentUserEmail = 'John.Johnny@gmail.com'; // Remplacez par la logique de votre application
+
+  // Chargement initial depuis localStorage
+  useEffect(() => {
+    const storedTestimonials = JSON.parse(localStorage.getItem('testimonials')) || [];
+    if (storedTestimonials.length) {
+      dispatch(setTestimonials(storedTestimonials));
+    }
+  }, [dispatch]);
+
+  // Sauvegarde dans localStorage lors des changements
+  useEffect(() => {
+    localStorage.setItem('testimonials', JSON.stringify(testimonials));
+    console.log('LocalStorage updated:', testimonials);
+  }, [testimonials]);
 
   const totalTestimonials = testimonials.length;
 
@@ -34,13 +52,23 @@ const Testimonials = () => {
   };
 
   const handleEdit = (id) => {
-    const updatedMessage = prompt("Enter new message:");
+    const testimonial = testimonials.find((t) => t.id === id);
+    if (testimonial.email !== currentUserEmail) {
+      alert("You can only edit your own testimonials.");
+      return;
+    }
+    const updatedMessage = prompt("Enter new message:", testimonial.message);
     if (updatedMessage) {
       dispatch(editTestimonial({ id, updatedData: { message: updatedMessage } }));
     }
   };
 
   const handleDelete = (id) => {
+    const testimonial = testimonials.find((t) => t.id === id);
+    if (testimonial.email !== currentUserEmail) {
+      alert("You can only delete your own testimonials.");
+      return;
+    }
     if (window.confirm("Are you sure you want to delete this testimonial?")) {
       dispatch(deleteTestimonial(id));
       setCurrentIndex((prevIndex) =>
@@ -50,10 +78,12 @@ const Testimonials = () => {
   };
 
   const handleAddTestimonial = () => {
-    dispatch(addTestimonial({ ...newTestimonial, id: testimonials.length + 1 }));
+    const newId = testimonials.length ? Math.max(...testimonials.map(t => t.id)) + 1 : 1;
+    dispatch(addTestimonial({ ...newTestimonial, id: newId }));
     setIsModalOpen(false);
     setNewTestimonial({
       author: '',
+      email: '',
       message: '',
       date: '',
       rating: 1
@@ -64,6 +94,7 @@ const Testimonials = () => {
     setIsModalOpen(false);
     setNewTestimonial({
       author: '',
+      email: '',
       message: '',
       date: '',
       rating: 1
@@ -96,26 +127,30 @@ const Testimonials = () => {
       <div className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-lg">
         {/* Testimonial Content */}
         <div className="mb-6">
-          {renderStars(currentTestimonial.rating)}
-          <p className="text-lg mb-4 text-gray-600">"{currentTestimonial.message}"</p>
-          <p className="font-semibold text-gray-900"> {currentTestimonial.author}</p>
-          <p className="text-sm text-gray-500">{currentTestimonial.date}</p>
+          {currentTestimonial && renderStars(currentTestimonial.rating)}
+          <p className="text-lg mb-4 text-gray-600">"{currentTestimonial?.message}"</p>
+          <p className="font-semibold text-gray-900">{currentTestimonial?.author}</p>
+          <p className="text-sm text-gray-500">{currentTestimonial?.date}</p>
         </div>
         
         {/* Edit and Delete Buttons */}
         <div className="flex justify-center gap-4 mb-4">
-          <button
-            onClick={() => handleEdit(currentTestimonial.id)}
-            className="bg-gradient-to-br from-purple-500 to-silver-500 hover:bg-slate-200 text-white px-4 py-2 rounded-md shadow-md hover:bg-purple-600"
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => handleDelete(currentTestimonial.id)}
-            className="bg-gradient-to-br from-purple-500 to-silver-500 hover:bg-slate-200 text-white px-4 py-2 rounded-md shadow-md hover:bg-gray-600"
-          >
-            Delete
-          </button>
+          {currentTestimonial && (
+            <>
+              <button
+                onClick={() => handleEdit(currentTestimonial.id)}
+                className="bg-gradient-to-br from-purple-500 to-silver-500 hover:bg-slate-200 text-white px-4 py-2 rounded-md shadow-md hover:bg-purple-600"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(currentTestimonial.id)}
+                className="bg-gradient-to-br from-purple-500 to-silver-500 hover:bg-slate-200 text-white px-4 py-2 rounded-md shadow-md hover:bg-gray-600"
+              >
+                Delete
+              </button>
+            </>
+          )}
         </div>
         
         {/* Navigation Dots */}
@@ -132,13 +167,13 @@ const Testimonials = () => {
         {/* Previous and Next Buttons */}
         <div className="flex justify-between">
           <button
-            onClick={() => handlePrevious()}
+            onClick={handlePrevious}
             className="bg-gray-500 text-white px-4 py-2 rounded-full shadow-md hover:bg-gray-600"
           >
             &lt;
           </button>
           <button
-            onClick={() => handleNext()}
+            onClick={handleNext}
             className="bg-purple-500 text-white px-4 py-2 rounded-full shadow-md hover:bg-purple-600"
           >
             &gt;
@@ -150,16 +185,16 @@ const Testimonials = () => {
       <div className="text-center mt-8">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-purple-500 text-white px-6 py-3 rounded-md shadow-md hover:bg-purple-600"
+          className="bg-purple-500 text-white px-4 py-2 rounded-full shadow-md hover:bg-purple-600"
         >
           Add Testimonial
         </button>
       </div>
-      
-      {/* Add Testimonial Modal */}
+
+      {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
             <h3 className="text-lg font-semibold mb-4">Add Testimonial</h3>
             <div className="mb-4">
               <label className="block text-gray-700">Author</label>
@@ -167,7 +202,16 @@ const Testimonials = () => {
                 type="text"
                 value={newTestimonial.author}
                 onChange={(e) => setNewTestimonial({ ...newTestimonial, author: e.target.value })}
-                className="border border-gray-300 p-2 w-full rounded"
+                className="border border-gray-300 p-2 rounded w-full"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700">Email</label>
+              <input
+                type="email"
+                value={newTestimonial.email}
+                onChange={(e) => setNewTestimonial({ ...newTestimonial, email: e.target.value })}
+                className="border border-gray-300 p-2 rounded w-full"
               />
             </div>
             <div className="mb-4">
@@ -175,8 +219,7 @@ const Testimonials = () => {
               <textarea
                 value={newTestimonial.message}
                 onChange={(e) => setNewTestimonial({ ...newTestimonial, message: e.target.value })}
-                className="border border-gray-300 p-2 w-full rounded"
-                rows="4"
+                className="border border-gray-300 p-2 rounded w-full"
               />
             </div>
             <div className="mb-4">
@@ -185,32 +228,32 @@ const Testimonials = () => {
                 type="date"
                 value={newTestimonial.date}
                 onChange={(e) => setNewTestimonial({ ...newTestimonial, date: e.target.value })}
-                className="border border-gray-300 p-2 w-full rounded"
+                className="border border-gray-300 p-2 rounded w-full"
               />
             </div>
             <div className="mb-4">
               <label className="block text-gray-700">Rating</label>
               <input
                 type="number"
-                value={newTestimonial.rating}
-                onChange={(e) => setNewTestimonial({ ...newTestimonial, rating: parseInt(e.target.value) })}
-                className="border border-gray-300 p-2 w-full rounded"
                 min="1"
                 max="5"
+                value={newTestimonial.rating}
+                onChange={(e) => setNewTestimonial({ ...newTestimonial, rating: parseInt(e.target.value, 10) })}
+                className="border border-gray-300 p-2 rounded w-full"
               />
             </div>
-            <div className="flex justify-between">
-              <button
-                onClick={handleAddTestimonial}
-                className="bg-purple-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-purple-600"
-              >
-                Add
-              </button>
+            <div className="flex justify-end space-x-4">
               <button
                 onClick={handleModalClose}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-gray-600"
+                className="bg-gray-500 text-white px-4 py-2 rounded-full shadow-md hover:bg-gray-600"
               >
                 Cancel
+              </button>
+              <button
+                onClick={handleAddTestimonial}
+                className="bg-purple-500 text-white px-4 py-2 rounded-full shadow-md hover:bg-purple-600"
+              >
+                Add
               </button>
             </div>
           </div>

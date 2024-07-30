@@ -1,4 +1,4 @@
-// src/Components/SignIn.js
+//SignIn.js
 'use client';
 
 import React, { useState } from 'react';
@@ -16,13 +16,20 @@ const SignIn = ({ onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('handleSubmit called');
-    dispatch(login({ email, password })); // Ajouter le mot de passe à la requête login
+
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const user = users.find(user => user.email === email && user.password === password);
+
+    if (!user) {
+      alert('User not registered or incorrect password');
+      return;
+    }
+
+    dispatch(login({ email, password }));
+    
     if (typeof onClose === 'function') {
-      console.log('onClose is a function, calling onClose');
-      onClose(); // Ferme la modale après soumission
-      console.log('Modal should be closed now');
-      navigate('/testimonials'); // Naviguer vers Testimonials après la fermeture de la modale
+      onClose(); // Close the modal after submission
+      navigate('/testimonials'); // Navigate to Testimonials after closing the modal
     } else {
       console.error('onClose is not a function');
     }
