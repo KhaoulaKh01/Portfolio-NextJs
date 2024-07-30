@@ -9,5 +9,6 @@ Testimonials: Feedback and reviews from my clients and colleagues.
 Contact: Form to contact me directly.
 Screenshots
 Here is screenshot of the home page of my portfolio:
-![about Page](portfolio-nextjs\src\portfolioNextJs.png)
+![about Page](https://github.com/2709725KHOUDALI/portfolio-nextJs/blob/Premierbranche/src/portfolioNextJs.png)
+
 
