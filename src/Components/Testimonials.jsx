@@ -10,6 +10,7 @@ const Testimonials = () => {
   const testimonials = useSelector((state) => state.testimonials);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [newTestimonial, setNewTestimonial] = useState({
     author: '',
     email: '',
@@ -17,11 +18,11 @@ const Testimonials = () => {
     date: '',
     rating: 1
   });
+  const [enteredEmail, setEnteredEmail] = useState('');
+  const [actionType, setActionType] = useState(null);
+  const [selectedTestimonialId, setSelectedTestimonialId] = useState(null);
 
-  // Exemple d'email de l'utilisateur actuel
-  const currentUserEmail = 'John.Johnny@gmail.com'; // Remplacez par la logique de votre application
-
-  // Chargement initial depuis localStorage
+  // Initial loading from localStorage
   useEffect(() => {
     const storedTestimonials = JSON.parse(localStorage.getItem('testimonials')) || [];
     if (storedTestimonials.length) {
@@ -29,7 +30,7 @@ const Testimonials = () => {
     }
   }, [dispatch]);
 
-  // Sauvegarde dans localStorage lors des changements
+  // Save to localStorage on changes
   useEffect(() => {
     localStorage.setItem('testimonials', JSON.stringify(testimonials));
     console.log('LocalStorage updated:', testimonials);
@@ -52,28 +53,37 @@ const Testimonials = () => {
   };
 
   const handleEdit = (id) => {
-    const testimonial = testimonials.find((t) => t.id === id);
-    if (testimonial.email !== currentUserEmail) {
-      alert("You can only edit your own testimonials.");
-      return;
-    }
-    const updatedMessage = prompt("Enter new message:", testimonial.message);
-    if (updatedMessage) {
-      dispatch(editTestimonial({ id, updatedData: { message: updatedMessage } }));
-    }
+    setSelectedTestimonialId(id);
+    setActionType('edit');
+    setIsEmailModalOpen(true);
   };
 
   const handleDelete = (id) => {
-    const testimonial = testimonials.find((t) => t.id === id);
-    if (testimonial.email !== currentUserEmail) {
-      alert("You can only delete your own testimonials.");
+    setSelectedTestimonialId(id);
+    setActionType('delete');
+    setIsEmailModalOpen(true);
+  };
+
+  const verifyEmail = () => {
+    const testimonial = testimonials.find((t) => t.id === selectedTestimonialId);
+    if (testimonial.email !== enteredEmail) {
+      alert("Email does not match the testimonial's email.");
+      setIsEmailModalOpen(false);
       return;
     }
-    if (window.confirm("Are you sure you want to delete this testimonial?")) {
-      dispatch(deleteTestimonial(id));
-      setCurrentIndex((prevIndex) =>
-        prevIndex === 0 ? 0 : prevIndex - 1
-      );
+    setIsEmailModalOpen(false);
+    if (actionType === 'edit') {
+      const updatedMessage = prompt("Enter new message:", testimonial.message);
+      if (updatedMessage) {
+        dispatch(editTestimonial({ id: selectedTestimonialId, updatedData: { message: updatedMessage } }));
+      }
+    } else if (actionType === 'delete') {
+      if (window.confirm("Are you sure you want to delete this testimonial?")) {
+        dispatch(deleteTestimonial(selectedTestimonialId));
+        setCurrentIndex((prevIndex) =>
+          prevIndex === 0 ? 0 : prevIndex - 1
+        );
+      }
     }
   };
 
@@ -139,13 +149,13 @@ const Testimonials = () => {
             <>
               <button
                 onClick={() => handleEdit(currentTestimonial.id)}
-                className="bg-gradient-to-br from-purple-500 to-silver-500 hover:bg-slate-200 text-white px-4 py-2 rounded-md shadow-md hover:bg-purple-600"
+                className="px-6 py-3 rounded-full bg-gradient-to-br from-purple-500 to-silver-500 hover:bg-slate-200 text-black font-bold"
               >
                 Edit
               </button>
               <button
                 onClick={() => handleDelete(currentTestimonial.id)}
-                className="bg-gradient-to-br from-purple-500 to-silver-500 hover:bg-slate-200 text-white px-4 py-2 rounded-md shadow-md hover:bg-gray-600"
+                className="px-6 py-3 rounded-full bg-gradient-to-br from-purple-500 to-silver-500 hover:bg-slate-200 text-black font-bold"
               >
                 Delete
               </button>
@@ -185,13 +195,13 @@ const Testimonials = () => {
       <div className="text-center mt-8">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-purple-500 text-white px-4 py-2 rounded-full shadow-md hover:bg-purple-600"
+          className="px-6 py-3 rounded-full bg-gradient-to-br from-purple-500 to-silver-500 hover:bg-slate-200 text-black font-bold"
         >
           Add Testimonial
         </button>
       </div>
 
-      {/* Modal */}
+      {/* Add Testimonial Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
@@ -235,25 +245,57 @@ const Testimonials = () => {
               <label className="block text-gray-700">Rating</label>
               <input
                 type="number"
+                value={newTestimonial.rating}
+                onChange={(e) => setNewTestimonial({ ...newTestimonial, rating: parseInt(e.target.value) })}
+                className="border border-gray-300 p-2 rounded w-full"
                 min="1"
                 max="5"
-                value={newTestimonial.rating}
-                onChange={(e) => setNewTestimonial({ ...newTestimonial, rating: parseInt(e.target.value, 10) })}
-                className="border border-gray-300 p-2 rounded w-full"
               />
             </div>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={handleModalClose}
-                className="bg-gray-500 text-white px-4 py-2 rounded-full shadow-md hover:bg-gray-600"
+                className="px-4 py-2 bg-gray-500 text-white rounded"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddTestimonial}
-                className="bg-purple-500 text-white px-4 py-2 rounded-full shadow-md hover:bg-purple-600"
+                className="px-4 py-2 bg-purple-500 text-white rounded"
               >
                 Add
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email Verification Modal */}
+      {isEmailModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
+            <h3 className="text-lg font-semibold mb-4">Enter your email to verify</h3>
+            <div className="mb-4">
+              <label className="block text-gray-700">Email</label>
+              <input
+                type="email"
+                value={enteredEmail}
+                onChange={(e) => setEnteredEmail(e.target.value)}
+                className="border border-gray-300 p-2 rounded w-full"
+              />
+            </div>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setIsEmailModalOpen(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={verifyEmail}
+                className="px-4 py-2 bg-purple-500 text-white rounded"
+              >
+                Verify
               </button>
             </div>
           </div>
@@ -264,3 +306,4 @@ const Testimonials = () => {
 };
 
 export default Testimonials;
+

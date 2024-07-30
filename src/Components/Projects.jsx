@@ -42,7 +42,7 @@ const Projects = () => {
 
   return (
     <div className="flex flex-col items-center py-10 bg-gray-100 p-5" id="projects">
-      <div className="flex flex-col items-center w-full max-w-5xl gap-6">
+      <div className="flex flex-col items-center w-full max-w-5xl gap-6 ">
         <h2 className="text-4xl font-semibold text-center mt-24 text-gray-600">Projects</h2>
         <div className="flex justify-between gap-6 flex-wrap md:flex-nowrap">
           {projects.map((project, index) => (
@@ -61,8 +61,8 @@ const Projects = () => {
                 </div>
               </div>
               <div className="flex gap-4">
-                <button onClick={() => openModal(project)} className="px-6 inline-block py-3 w-full sm:w-fit rounded-full bg-gradient-to-br from-purple-500 to-silver-500 hover:bg-slate-200 text-black">See More</button>
-                <a href={project.source} className="px-6 inline-block py-3 w-full sm:w-fit rounded-full bg-gradient-to-br from-purple-500 to-silver-500 hover:bg-slate-200 text-black" target="_blank" rel="noopener noreferrer">Source</a>
+                <button onClick={() => openModal(project)} className="px-6 py-3 rounded-full bg-gradient-to-br from-purple-500 to-silver-500 hover:bg-slate-200 text-black font-bold">See More</button>
+                <a href={project.source} className="px-6 py-3 rounded-full bg-gradient-to-br from-purple-500 to-silver-500 hover:bg-slate-200 text-black font-bold">Source</a>
               </div>
             </div>
           ))}
@@ -74,7 +74,7 @@ const Projects = () => {
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
             <h3 className="text-2xl font-semibold mb-3 text-gray-700">{selectedProject.title}</h3>
             <p className="text-gray-600 mb-3">{selectedProject.detailedDescription}</p>
-            <button onClick={closeModal} className="px-6 inline-block py-3 w-full sm:w-fit rounded-full bg-gradient-to-br from-purple-500 to-silver-500 hover:bg-slate-200 text-black">Close</button>
+            <button onClick={closeModal} className="px-6 py-3 rounded-full bg-gradient-to-br from-purple-500 to-silver-500 hover:bg-slate-200 text-black font-bold">Close</button>
           </div>
         </div>
       )}
